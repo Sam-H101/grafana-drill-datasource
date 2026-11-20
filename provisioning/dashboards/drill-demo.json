@@ -1,0 +1,107 @@
+{
+  "uid": "drill-demo",
+  "title": "Apache Drill demo",
+  "description": "Exercises the Apache Drill data source against Drill's bundled sample data (cp.employee.json, cp.department.json).",
+  "tags": ["drill"],
+  "timezone": "utc",
+  "editable": true,
+  "schemaVersion": 41,
+  "time": { "from": "1994-01-01T00:00:00.000Z", "to": "1999-01-01T00:00:00.000Z" },
+  "templating": {
+    "list": [
+      {
+        "name": "gender",
+        "label": "Gender",
+        "type": "query",
+        "datasource": { "type": "smartquinoa1504-apachedrill-datasource", "uid": "drill-dev" },
+        "query": { "refId": "gender", "rawSql": "SELECT DISTINCT gender FROM cp.`employee.json` ORDER BY 1" },
+        "definition": "SELECT DISTINCT gender FROM cp.`employee.json` ORDER BY 1",
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "current": { "selected": true, "text": ["All"], "value": ["$__all"] },
+        "sort": 1
+      },
+      {
+        "name": "dept",
+        "label": "Department",
+        "type": "query",
+        "datasource": { "type": "smartquinoa1504-apachedrill-datasource", "uid": "drill-dev" },
+        "query": {
+          "refId": "dept",
+          "rawSql": "SELECT department_id AS __value, department_description AS __text FROM cp.`department.json` ORDER BY department_id"
+        },
+        "definition": "SELECT department_id AS __value, department_description AS __text FROM cp.`department.json`",
+        "refresh": 1,
+        "multi": false,
+        "includeAll": false,
+        "current": { "selected": true, "text": "Store Management", "value": "11" }
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "name": "Senior management hires",
+        "enable": true,
+        "iconColor": "orange",
+        "datasource": { "type": "smartquinoa1504-apachedrill-datasource", "uid": "drill-dev" },
+        "target": {
+          "refId": "Anno",
+          "format": "table",
+          "rawSql": "SELECT CAST(hire_date AS TIMESTAMP) AS `time`, full_name AS text, position_title AS tags FROM cp.`employee.json` WHERE management_role = 'Senior Management' AND $__timeFilter(CAST(hire_date AS TIMESTAMP))"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Hires per quarter by gender",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 9 },
+      "datasource": { "type": "smartquinoa1504-apachedrill-datasource", "uid": "drill-dev" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "timeseries",
+          "fillMode": "value",
+          "fillValue": 0,
+          "rawSql": "SELECT $__timeGroupAlias(CAST(hire_date AS TIMESTAMP), 90d), gender, COUNT(*) AS hires\nFROM cp.`employee.json`\nWHERE $__timeFilter(CAST(hire_date AS TIMESTAMP)) AND gender IN ($gender)\nGROUP BY 1, 2\nORDER BY 1"
+        }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars", "fillOpacity": 60 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Employees in $dept",
+      "gridPos": { "x": 0, "y": 9, "w": 16, "h": 10 },
+      "datasource": { "type": "smartquinoa1504-apachedrill-datasource", "uid": "drill-dev" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT employee_id, full_name, gender, position_title, salary, CAST(hire_date AS TIMESTAMP) AS hire_date\nFROM cp.`employee.json`\nWHERE gender IN ($gender) AND department_id = $dept\nORDER BY employee_id"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Employees by gender",
+      "gridPos": { "x": 16, "y": 9, "w": 8, "h": 10 },
+      "datasource": { "type": "smartquinoa1504-apachedrill-datasource", "uid": "drill-dev" },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT gender, COUNT(*) AS employees FROM cp.`employee.json` WHERE gender IN ($gender) GROUP BY gender ORDER BY gender"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] },
+      "options": { "reduceOptions": { "values": true, "calcs": ["lastNotNull"], "fields": "" }, "textMode": "value_and_name" }
+    }
+  ]
+}

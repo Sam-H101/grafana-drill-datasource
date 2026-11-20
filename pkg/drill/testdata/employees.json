@@ -1,0 +1,13 @@
+{"queryId":"15005e6d-abff-eec2-2378-3762b7f15885"
+,"columns":["gender","h","salary"]
+,"metadata":["VARCHAR","TIMESTAMP","FLOAT8"]
+,"attemptedAutoLimit":0
+,"rows":[
+{"gender":"F","h":786240000000,"salary":80000.0}
+,{"gender":"M","h":786240000000,"salary":40000.0}
+,{"gender":"M","h":883612800000,"salary":40000.0}
+,{"gender":"F","h":883612800000,"salary":35000.0}
+,{"gender":"F","h":786240000000,"salary":25000.0}
+]
+,"queryState":"COMPLETED"
+}

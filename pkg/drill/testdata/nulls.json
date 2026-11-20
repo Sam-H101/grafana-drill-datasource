@@ -1,0 +1,9 @@
+{"queryId":"15005e6d-f765-ece0-5b10-024fba8f45d4"
+,"columns":["i","v","ts","d","bo"]
+,"metadata":["INT","VARCHAR(65535)","TIMESTAMP","FLOAT8","BIT"]
+,"attemptedAutoLimit":0
+,"rows":[
+{"i":null,"v":null,"ts":null,"d":null,"bo":null}
+]
+,"queryState":"COMPLETED"
+}

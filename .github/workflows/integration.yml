@@ -1,0 +1,52 @@
+name: Integration tests
+
+# Backend tests against live Drill containers (plain, authenticated, HTTPS),
+# started from the same docker-compose.yaml as the dev stack.
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: Go integration tests against Drill
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Start Drill
+        run: |
+          docker compose up -d --wait drill drill-auth drill-tls
+          docker compose cp drill-tls:/tls/ca.crt "$RUNNER_TEMP/drill-ca.crt"
+
+      - name: Run integration tests
+        env:
+          DRILL_URL: http://localhost:8047
+          DRILL_AUTH_URL: http://localhost:8048
+          DRILL_TLS_URL: https://localhost:8049
+          DRILL_TLS_CA_FILE: ${{ runner.temp }}/drill-ca.crt
+        run: go test -tags integration -race -count=1 -v ./tests/integration/...
+
+      - name: Drill logs
+        if: failure()
+        run: docker compose logs drill drill-auth drill-tls | tail -n 300
+
+      - name: Stop Drill
+        if: always()
+        run: docker compose down -v

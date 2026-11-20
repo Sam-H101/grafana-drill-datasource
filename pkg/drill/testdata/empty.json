@@ -1,0 +1,8 @@
+{"queryId":"15005e6e-1de2-710d-fe84-23848dbe4581"
+,"columns":["employee_id","full_name"]
+,"metadata":["BIGINT","VARCHAR"]
+,"attemptedAutoLimit":0
+,"rows":[
+]
+,"queryState":"COMPLETED"
+}

@@ -1,0 +1,100 @@
+# Dev stack: `docker compose up -d` starts Grafana and Drill.
+# The toolbox (profile "tools") runs builds and tests: see devenv/run.sh.
+services:
+  grafana:
+    extends:
+      file: .config/docker-compose-base.yaml
+      service: grafana
+    build:
+      args:
+        # Pinned to the version the plugin was tested with; CI overrides it.
+        grafana_version: ${GRAFANA_VERSION:-13.3.1}
+    # Local by default: the dev image grants anonymous Admin. To expose the
+    # stack, set BIND_ADDRESS, ANONYMOUS_AUTH_ENABLED=false and
+    # GRAFANA_ADMIN_PASSWORD (see devenv/README.md).
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    ports: !override
+      - ${BIND_ADDRESS:-127.0.0.1}:3000:3000/tcp
+    depends_on:
+      drill:
+        condition: service_healthy
+
+  drill: &drill
+    image: apache/drill:${DRILL_VERSION:-1.22.0}
+    # Embedded mode runs the sqlline shell; without a TTY it exits at once.
+    stdin_open: true
+    tty: true
+    environment:
+      TZ: UTC
+    ports:
+      - ${BIND_ADDRESS:-127.0.0.1}:8047:8047/tcp
+    healthcheck:
+      # The image has no curl or wget.
+      test: ['CMD', 'bash', '-c', 'exec 3<>/dev/tcp/127.0.0.1/8047 && printf "GET /status HTTP/1.0\r\n\r\n" >&3 && grep -q Running <&3']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  # Drill with user authentication (devenv/drill/README.md).
+  drill-auth:
+    <<: *drill
+    # The embedded sqlline shell must log in too, or the in-process Drillbit
+    # shuts down. Dev-only credentials (devenv/drill/README.md).
+    entrypoint: ['/opt/drill/bin/drill-embedded', '-n', 'grafana', '-p', 'grafana-dev-password']
+    ports:
+      - ${BIND_ADDRESS:-127.0.0.1}:8048:8047/tcp
+    volumes:
+      - ./devenv/drill/auth/drill-override.conf:/opt/drill/conf/drill-override.conf:ro
+      - ./devenv/drill/auth/htpasswd:/opt/drill/conf/htpasswd:ro
+
+  # Drill serving HTTPS with a throwaway CA (devenv/drill/README.md). Starts as
+  # root only to write the certificates, then runs Drill as drilluser.
+  drill-tls:
+    <<: *drill
+    user: root
+    entrypoint: ['/bin/sh', '/devenv/entrypoint.sh']
+    ports:
+      - ${BIND_ADDRESS:-127.0.0.1}:8049:8047/tcp
+    volumes:
+      - ./devenv/drill/tls/drill-override.conf:/opt/drill/conf/drill-override.conf:ro
+      - ./devenv/drill/tls/entrypoint.sh:/devenv/entrypoint.sh:ro
+      - drill-tls:/tls
+    healthcheck:
+      test: ['CMD', 'bash', '-c', 'printf "GET /status HTTP/1.0\r\n\r\n" | openssl s_client -quiet -connect 127.0.0.1:8047 2>/dev/null | grep -q Running']
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+
+  toolbox:
+    profiles: ['tools']
+    build:
+      context: devenv/toolbox
+      args:
+        UID: ${TOOLBOX_UID:-1001}
+        GID: ${TOOLBOX_GID:-1002}
+    image: samh-apache-drill-toolbox:local
+    init: true
+    working_dir: /workspace
+    environment:
+      GRAFANA_URL: http://grafana:3000
+      DRILL_URL: http://drill:8047
+      CI: ${CI:-}
+    volumes:
+      - .:/workspace
+      - node_modules:/workspace/node_modules
+      - gomod:/go/pkg/mod
+      - gobuild:/home/dev/.cache/go-build
+      - npmcache:/home/dev/.npm
+      - playwright:/ms-playwright
+      - drill-tls:/tls:ro
+
+volumes:
+  drill-tls:
+  node_modules:
+  gomod:
+  gobuild:
+  npmcache:
+  playwright:

@@ -1,0 +1,16 @@
+apiVersion: 1
+
+datasources:
+  - name: Apache Drill
+    uid: drill-dev
+    type: smartquinoa1504-apachedrill-datasource
+    access: proxy
+    url: http://drill:8047
+    isDefault: true
+    orgId: 1
+    version: 1
+    editable: true
+    jsonData:
+      authMode: none
+      timeoutSeconds: 60
+      autoLimit: 10000

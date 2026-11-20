@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "Apache Drill",
+  "id": "smartquinoa1504-apachedrill-datasource",
+  "metrics": true,
+  "annotations": true,
+  "alerting": true,
+  "backend": true,
+  "executable": "gpx_apache_drill",
+  "info": {
+    "description": "Query Apache Drill with SQL: tables, time series, template variables, annotations and alerting.",
+    "author": {
+      "name": "Samh"
+    },
+    "keywords": ["datasource", "drill", "apache drill", "sql", "parquet", "json", "csv"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      { "name": "Apache Drill", "url": "https://drill.apache.org/" },
+      { "name": "Licence (Apache-2.0)", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+    ],
+    "screenshots": [
+      { "name": "Dashboard", "path": "img/screenshots/dashboard.png" },
+      { "name": "Query editor", "path": "img/screenshots/query-editor.png" },
+      { "name": "Configuration", "path": "img/screenshots/config-editor.png" }
+    ],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=13.2.0",
+    "plugins": []
+  }
+}

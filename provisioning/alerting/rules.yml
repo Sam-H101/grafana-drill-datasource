@@ -1,0 +1,38 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: drill-demo
+    folder: Apache Drill
+    interval: 1m
+    rules:
+      - uid: drill-employee-count
+        title: Drill sample data is present
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: drill-dev
+            model:
+              refId: A
+              format: table
+              rawSql: SELECT COUNT(*) AS employees FROM cp.`employee.json`
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+        noDataState: NoData
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: Drill returned no rows from its sample employee data.
+        labels:
+          source: drill

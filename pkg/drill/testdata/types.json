@@ -1,0 +1,9 @@
+{"queryId":"15005e6e-5bdd-c46c-85fd-4d5aca1609cb"
+,"columns":["i","b","f4","f8","nan","ninf","dec","bt","ch","v","d","t","ts","old","ids","iym","vb","m","lst"]
+,"metadata":["INT","BIGINT","FLOAT4","FLOAT8","FLOAT8","FLOAT8","VARDECIMAL(5, 2)","BIT","VARCHAR(1)","VARCHAR(15)","DATE","TIME","TIMESTAMP","TIMESTAMP","INTERVALDAY","INTERVALYEAR","VARBINARY","MAP","BIGINT"]
+,"attemptedAutoLimit":0
+,"rows":[
+{"i":1,"b":9007199254740993,"f4":1.5,"f8":2.25,"nan":"NaN","ninf":"-Infinity","dec":1.10,"bt":true,"ch":"x","v":"quote\"and\\backé","d":1704153600000,"t":47655123,"ts":1704164645678,"old":-304707110990,"ids":"P1DT7384S","iym":"P1Y2M","vb":"YWJj","m":{"a":1,"b":[1,2]},"lst":[1,2,3]}
+]
+,"queryState":"COMPLETED"
+}

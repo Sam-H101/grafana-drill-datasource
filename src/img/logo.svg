@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Apache Drill data source">
+  <!-- Original artwork for this plugin: a data cylinder with a drill bit. -->
+  <defs>
+    <linearGradient id="bit" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffb357"/>
+      <stop offset="1" stop-color="#f57f0e"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="#3d71d9" stroke-width="3.5">
+    <ellipse cx="26" cy="14" rx="20" ry="7"/>
+    <path d="M6 14v32c0 3.9 9 7 20 7s20-3.1 20-7V14"/>
+    <path d="M6 30c0 3.9 9 7 20 7s20-3.1 20-7" opacity=".55"/>
+  </g>
+  <g transform="rotate(-35 50 34)">
+    <rect x="45" y="6" width="10" height="9" rx="2" fill="#5a6270"/>
+    <path d="M45 15h10v26l-5 13-5-13z" fill="url(#bit)"/>
+    <path d="M45 21l10 5M45 29l10 5M45 37l10 4" stroke="#b85600" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+</svg>
