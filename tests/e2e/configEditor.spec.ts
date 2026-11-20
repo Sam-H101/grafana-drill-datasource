@@ -22,7 +22,8 @@ test('provisioned data source: Save & test succeeds and reports the Drill versio
   page,
 }) => {
   const configPage = await gotoDataSourceConfigPage('drill-dev');
-  await expect(page.getByLabel('URL')).toHaveValue('http://drill:8047');
+  // The first page load after Grafana starts can take more than 5 s.
+  await expect(page.getByLabel('URL')).toHaveValue('http://drill:8047', { timeout: 15_000 });
   await expect(configPage.saveAndTest()).toBeOK();
   await expect(configPage).toHaveAlert('success', { hasText: /Connected to Apache Drill 1\.\d+/ });
   await shot(page, 'm1-config', 'provisioned-ok');
