@@ -118,8 +118,9 @@ jobs:
       - name: Package plugin
         id: package-plugin
         run: |
-          mv dist ${PLUGIN_ID}
-          zip ${ARCHIVE} ${PLUGIN_ID} -r
+          mv dist "${PLUGIN_ID}"
+          zip "${ARCHIVE}" "${PLUGIN_ID}" -r
+          sha1sum "${ARCHIVE}" > "${ARCHIVE}.sha1"
         env:
           ARCHIVE: ${{ steps.metadata.outputs.archive }}
           PLUGIN_ID: ${{ steps.metadata.outputs.plugin-id }}
@@ -138,6 +139,17 @@ jobs:
           name: ${{ steps.metadata.outputs.plugin-id }}-${{ steps.metadata.outputs.plugin-version }}
           path: ${{ steps.metadata.outputs.plugin-id }}
           retention-days: 5
+
+      # The installable archive (what a release attaches), with its SHA-1.
+      - name: Upload plugin archive
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.metadata.outputs.archive }}
+          path: |
+            ${{ steps.metadata.outputs.archive }}
+            ${{ steps.metadata.outputs.archive }}.sha1
+          if-no-files-found: error
+          retention-days: 14
 
   resolve-versions:
     name: Resolve e2e images
