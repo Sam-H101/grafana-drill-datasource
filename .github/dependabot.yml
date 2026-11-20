@@ -11,6 +11,13 @@ updates:
       exclude:
         - '@grafana/plugin-e2e'
     open-pull-requests-limit: 5
+    ignore:
+      # typescript-eslint supports TypeScript below 6.1 only.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      # Keep the types on the Node 24 runtime used to build.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: 'chore'
       include: 'scope'
