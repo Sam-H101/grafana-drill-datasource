@@ -27,6 +27,12 @@ services:
     tty: true
     environment:
       TZ: UTC
+      # The image's Java 17.0.2 crashes detecting cgroup v2 on newer kernels
+      # (GitHub's Ubuntu 26.04 runners); without detection Java sizes memory
+      # from the host, so cap it.
+      JAVA_TOOL_OPTIONS: -XX:-UseContainerSupport
+      DRILL_HEAP: 1G
+      DRILL_MAX_DIRECT_MEMORY: 1G
     ports:
       - ${BIND_ADDRESS:-127.0.0.1}:8047:8047/tcp
     healthcheck:

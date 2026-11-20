@@ -90,8 +90,17 @@ jobs:
           fi
 
       - name: Sign plugin
-        run: npm run sign
         if: ${{ env.GRAFANA_ACCESS_POLICY_TOKEN != '' }}
+        env:
+          # Comma-separated root URLs for a private signature; unset means a
+          # community signature (needs the plugin approved on grafana.com).
+          ROOT_URLS: ${{ vars.GRAFANA_ROOT_URLS }}
+        run: |
+          if [ -n "$ROOT_URLS" ]; then
+            npm run sign -- --rootUrls "$ROOT_URLS"
+          else
+            npm run sign
+          fi
 
       - name: Get plugin metadata
         id: metadata

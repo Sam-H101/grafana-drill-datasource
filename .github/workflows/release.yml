@@ -20,10 +20,11 @@ jobs:
           persist-credentials: false
 
       - uses: grafana/plugin-actions/build-plugin@build-plugin/v1.2.0
-        # Uncomment to enable plugin signing
-        # (For more info on how to generate the access policy token see https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin#generate-an-access-policy-token)
-        #with:
-        # Make sure to save the token in your repository secrets
-        #policy_token: $
-        # Usage of GRAFANA_API_KEY is deprecated, prefer `policy_token` option above
-        #grafana_token: $
+        with:
+          policy_token: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
+          # Set the GRAFANA_ROOT_URLS repo variable (comma-separated) for a
+          # private signature; leave it unset for a community signature,
+          # which needs the plugin approved on grafana.com first.
+          sign_root_urls: ${{ vars.GRAFANA_ROOT_URLS }}
+          go-version: '1.26'
+          node-version: '24'
