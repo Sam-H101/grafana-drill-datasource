@@ -14,3 +14,18 @@ datasources:
       authMode: none
       timeoutSeconds: 60
       autoLimit: 10000
+
+  # The same Drill, reachable only through the socks proxy (docker-compose.yaml).
+  - name: Apache Drill (private network)
+    uid: drill-pdc
+    type: smartquinoa1504-apachedrill-datasource
+    access: proxy
+    url: http://drill-private:8047
+    orgId: 1
+    version: 1
+    editable: true
+    jsonData:
+      authMode: none
+      timeoutSeconds: 60
+      autoLimit: 10000
+      enableSecureSocksProxy: true

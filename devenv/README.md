@@ -44,6 +44,12 @@ docker compose down                  # add -v to drop volumes too
 | `drill` | http://localhost:8047 | Drill without authentication |
 | `drill-auth` | http://localhost:8048 | Drill with user authentication (Basic and form login) |
 | `drill-tls` | https://localhost:8049 | Drill over HTTPS with a CA generated at start |
+| `socks` | internal | A SOCKS5 proxy, standing in for Private data source connect |
+
+`drill` is also on a second Docker network, `private`, as `drill-private`.
+Grafana is not on that network, so only a data source with the secure socks
+proxy turned on reaches `http://drill-private:8047`, through `socks`. That is
+how the tests check the Private data source connect path.
 
 Inside Docker, Grafana reaches the Drills by service name, for example
 `http://drill-auth:8047`. The dev-only credentials and Drill settings are in

@@ -35,6 +35,7 @@ export interface DrillOptions extends DataSourceJsonData {
   allowDML?: boolean;
   allowOptionChanges?: boolean;
   // Read by the Grafana SDK's HTTP client.
+  enableSecureSocksProxy?: boolean;
   tlsSkipVerify?: boolean;
   tlsAuth?: boolean;
   tlsAuthWithCACert?: boolean;

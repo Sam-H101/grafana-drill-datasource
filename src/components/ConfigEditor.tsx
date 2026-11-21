@@ -5,7 +5,19 @@ import {
   onUpdateDatasourceSecureJsonDataOption,
   updateDatasourcePluginResetOption,
 } from '@grafana/data';
-import { Alert, Field, Input, RadioButtonGroup, SecretInput, SecretTextArea, Stack, Switch, Text } from '@grafana/ui';
+import { config } from '@grafana/runtime';
+import {
+  Alert,
+  Field,
+  Input,
+  RadioButtonGroup,
+  SecretInput,
+  SecretTextArea,
+  SecureSocksProxySettings,
+  Stack,
+  Switch,
+  Text,
+} from '@grafana/ui';
 import { AuthMode, DrillOptions, DrillSecureJsonData } from '../types';
 
 type Props = DataSourcePluginOptionsEditorProps<DrillOptions, DrillSecureJsonData>;
@@ -49,6 +61,11 @@ export function ConfigEditor(props: Props) {
             onChange={(e) => onOptionsChange({ ...options, url: e.currentTarget.value })}
           />
         </Field>
+        {config.secureSocksDSProxyEnabled && (
+          <div data-testid="drill-secure-socks">
+            <SecureSocksProxySettings options={options} onOptionsChange={onOptionsChange} />
+          </div>
+        )}
       </section>
 
       <section>

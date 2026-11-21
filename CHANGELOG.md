@@ -1,9 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (unreleased)
 
 ### Added
 
+- Private networks: where Grafana has the secure socks proxy available, the
+  settings page offers it, so Grafana Cloud can reach a Drill on a private
+  network through Private data source connect.
 - Statement safety: the data source now runs only queries (`SELECT`, `WITH`,
   `VALUES`, `SHOW`, `DESCRIBE`, `EXPLAIN`) unless its settings allow more.
   Three settings allow statements that create or drop objects, change data,

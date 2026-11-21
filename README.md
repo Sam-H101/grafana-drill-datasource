@@ -19,6 +19,7 @@ and alert rules work.
 | Authentication mode | **None**, **Basic** or **Form login**, see below. |
 | Username, Password | For Basic and Form login. The password is stored encrypted and never sent back to the browser. |
 | Impersonate user | Only with **None**: queries run as this Drill user. Drill needs `drill.exec.impersonation.enabled: true`. |
+| Secure socks proxy | Shown only where Grafana has it available. See [Grafana Cloud and a private Drill](#grafana-cloud-and-a-private-drill). |
 | TLS | Skip verification (testing only), a custom CA certificate, and a client certificate and key. |
 | Statement safety | Three switches, all off by default, for the statements that are not queries. See [Statement safety](#statement-safety). |
 | Default schema | Schema for unqualified table names, for example `dfs.tmp`. Each query can override it. |
@@ -45,6 +46,23 @@ URL scheme, rejected credentials, or authentication required.
 With Basic or Form login over plain `http://`, the password crosses the
 network unencrypted; the configuration page warns about this. Use `https://`.
 
+### Grafana Cloud and a private Drill
+
+Grafana Cloud cannot reach a Drill inside your network on its own.
+[Private data source connect](https://grafana.com/docs/grafana-cloud/connect-externally-hosted/private-data-source-connect/)
+solves that: you run Grafana's agent on your network, and Grafana Cloud sends
+this data source's requests through it.
+
+1. Set up Private data source connect in your Grafana Cloud stack and start
+   the agent somewhere that can reach Drill.
+2. In this data source's settings, select your connection in the secure socks
+   proxy setting.
+3. For **URL**, enter Drill's address as the agent sees it, for example
+   `http://drill.internal:8047`.
+
+Self-hosted Grafana with the secure socks proxy configured works the same
+way.
+
 ### Provisioning
 
 ```yaml
@@ -61,6 +79,7 @@ datasources:
       timeoutSeconds: 60
       autoLimit: 10000
       tlsAuthWithCACert: true
+      # enableSecureSocksProxy: true   # Private data source connect
     secureJsonData:
       password: $DRILL_PASSWORD
       tlsCACert: $DRILL_CA_CERT

@@ -1,5 +1,27 @@
 # Dev stack: `docker compose up -d` starts Grafana and Drill.
 # The toolbox (profile "tools") runs builds and tests: see devenv/run.sh.
+# What the three Drill services share.
+x-drill: &drill
+  image: apache/drill:${DRILL_VERSION:-1.22.0}
+  # Embedded mode runs the sqlline shell; without a TTY it exits at once.
+  stdin_open: true
+  tty: true
+  environment:
+    TZ: UTC
+    # The image's Java 17.0.2 crashes detecting cgroup v2 on newer kernels
+    # (GitHub's Ubuntu 26.04 runners); without detection Java sizes memory
+    # from the host, so cap it.
+    JAVA_TOOL_OPTIONS: -XX:-UseContainerSupport
+    DRILL_HEAP: 1G
+    DRILL_MAX_DIRECT_MEMORY: 1G
+  healthcheck:
+    # The image has no curl or wget.
+    test: ['CMD', 'bash', '-c', 'exec 3<>/dev/tcp/127.0.0.1/8047 && printf "GET /status HTTP/1.0\r\n\r\n" >&3 && grep -q Running <&3']
+    interval: 5s
+    timeout: 5s
+    retries: 30
+    start_period: 20s
+
 services:
   grafana:
     extends:
@@ -14,34 +36,40 @@ services:
     # GRAFANA_ADMIN_PASSWORD (see devenv/README.md).
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      # Stands in for Grafana Cloud's Private data source connect: data
+      # sources with "secure socks proxy" on send their requests through the
+      # `socks` service. allow_insecure skips the mutual TLS that the real
+      # service uses, which a local SOCKS proxy cannot offer.
+      GF_SECURE_SOCKS_DATASOURCE_PROXY_ENABLED: 'true'
+      GF_SECURE_SOCKS_DATASOURCE_PROXY_PROXY_ADDRESS: socks:1080
+      GF_SECURE_SOCKS_DATASOURCE_PROXY_ALLOW_INSECURE: 'true'
+      GF_SECURE_SOCKS_DATASOURCE_PROXY_SHOW_UI: 'true'
     ports: !override
       - ${BIND_ADDRESS:-127.0.0.1}:3000:3000/tcp
     depends_on:
       drill:
         condition: service_healthy
 
-  drill: &drill
-    image: apache/drill:${DRILL_VERSION:-1.22.0}
-    # Embedded mode runs the sqlline shell; without a TTY it exits at once.
-    stdin_open: true
-    tty: true
-    environment:
-      TZ: UTC
-      # The image's Java 17.0.2 crashes detecting cgroup v2 on newer kernels
-      # (GitHub's Ubuntu 26.04 runners); without detection Java sizes memory
-      # from the host, so cap it.
-      JAVA_TOOL_OPTIONS: -XX:-UseContainerSupport
-      DRILL_HEAP: 1G
-      DRILL_MAX_DIRECT_MEMORY: 1G
+  drill:
+    <<: *drill
     ports:
       - ${BIND_ADDRESS:-127.0.0.1}:8047:8047/tcp
-    healthcheck:
-      # The image has no curl or wget.
-      test: ['CMD', 'bash', '-c', 'exec 3<>/dev/tcp/127.0.0.1/8047 && printf "GET /status HTTP/1.0\r\n\r\n" >&3 && grep -q Running <&3']
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 20s
+    networks:
+      default:
+      # Reachable under this name only through the socks proxy: it is how the
+      # tests prove that a request went through Private data source connect.
+      private:
+        aliases:
+          - drill-private
+
+  # A plain SOCKS5 proxy on both networks (see the grafana service).
+  socks:
+    image: serjs/go-socks5-proxy:latest
+    environment:
+      REQUIRE_AUTH: 'false'
+    networks:
+      - default
+      - private
 
   # Drill with user authentication (devenv/drill/README.md).
   drill-auth:
@@ -96,6 +124,10 @@ services:
       - npmcache:/home/dev/.npm
       - playwright:/ms-playwright
       - drill-tls:/tls:ro
+
+networks:
+  private:
+    internal: true
 
 volumes:
   drill-tls:
