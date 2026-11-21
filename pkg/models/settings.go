@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/sqlguard"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
@@ -43,6 +44,9 @@ type Settings struct {
 	DefaultSchema   string
 	Timeout         time.Duration
 	RowLimit        int
+	// Statements says which statements other than queries may run. The zero
+	// value allows queries only.
+	Statements sqlguard.Policy
 }
 
 type jsonSettings struct {
@@ -52,6 +56,10 @@ type jsonSettings struct {
 	DefaultSchema   string `json:"defaultSchema"`
 	TimeoutSeconds  int    `json:"timeoutSeconds"`
 	AutoLimit       int    `json:"autoLimit"`
+	// Statement safety: all default to false (blocked).
+	AllowDDL           bool `json:"allowDDL"`
+	AllowDML           bool `json:"allowDML"`
+	AllowOptionChanges bool `json:"allowOptionChanges"`
 }
 
 // ErrInvalidSettings wraps every validation failure so callers can report it
@@ -84,6 +92,11 @@ func LoadSettings(src backend.DataSourceInstanceSettings) (*Settings, error) {
 		Password:        src.DecryptedSecureJSONData["password"],
 		ImpersonateUser: strings.TrimSpace(js.ImpersonateUser),
 		DefaultSchema:   strings.TrimSpace(js.DefaultSchema),
+		Statements: sqlguard.Policy{
+			AllowDDL:     js.AllowDDL,
+			AllowDML:     js.AllowDML,
+			AllowOptions: js.AllowOptionChanges,
+		},
 	}
 
 	switch s.AuthMode {

@@ -1,6 +1,7 @@
 import { CoreApp, DataSourceInstanceSettings, ScopedVars } from '@grafana/data';
 import { DataSourceWithBackend, getTemplateSrv } from '@grafana/runtime';
 import { interpolateVariable } from './interpolate';
+import { StatementPolicy } from './safety';
 import { DEFAULT_QUERY, DrillOptions, DrillQuery } from './types';
 import { DrillVariableSupport } from './variables';
 
@@ -10,8 +11,17 @@ export interface ColumnInfo {
 }
 
 export class DataSource extends DataSourceWithBackend<DrillQuery, DrillOptions> {
+  /** What the backend will refuse to run; the query editor warns about it. */
+  readonly statementPolicy: StatementPolicy;
+
   constructor(instanceSettings: DataSourceInstanceSettings<DrillOptions>) {
     super(instanceSettings);
+    const jsonData = instanceSettings.jsonData ?? {};
+    this.statementPolicy = {
+      allowDDL: jsonData.allowDDL === true,
+      allowDML: jsonData.allowDML === true,
+      allowOptions: jsonData.allowOptionChanges === true,
+    };
     this.variables = new DrillVariableSupport(this);
     // Standard annotation support: the query editor is reused and result
     // columns (time, timeEnd, text, tags) are mapped by Grafana.

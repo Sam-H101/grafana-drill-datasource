@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Statement safety: the data source now runs only queries (`SELECT`, `WITH`,
+  `VALUES`, `SHOW`, `DESCRIBE`, `EXPLAIN`) unless its settings allow more.
+  Three settings allow statements that create or drop objects, change data,
+  or change Drill options. The backend enforces this, and the query editor
+  warns about a blocked statement as it is typed.
+
+### Changed
+
+- **Behaviour change:** statements other than queries, such as
+  `CREATE TABLE AS`, `DROP`, `ALTER SESSION` and `USE`, used to be sent to
+  Drill and are now refused by default. Turn on the matching setting under
+  Statement safety to run them.
+
 ## 0.1.2 (2026-11-21)
 
 ### Changed

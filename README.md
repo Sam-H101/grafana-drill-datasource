@@ -20,6 +20,7 @@ and alert rules work.
 | Username, Password | For Basic and Form login. The password is stored encrypted and never sent back to the browser. |
 | Impersonate user | Only with **None**: queries run as this Drill user. Drill needs `drill.exec.impersonation.enabled: true`. |
 | TLS | Skip verification (testing only), a custom CA certificate, and a client certificate and key. |
+| Statement safety | Three switches, all off by default, for the statements that are not queries. See [Statement safety](#statement-safety). |
 | Default schema | Schema for unqualified table names, for example `dfs.tmp`. Each query can override it. |
 | Query timeout | Seconds, 1 to 3600, default 60. A query that runs longer is cancelled on Drill. |
 | Row limit | 1 to 1,000,000, default 10,000. Drill stops after this many rows, and the panel shows a notice when the limit is reached. |
@@ -64,6 +65,31 @@ datasources:
       password: $DRILL_PASSWORD
       tlsCACert: $DRILL_CA_CERT
 ```
+
+### Statement safety
+
+By default the data source only runs queries: `SELECT`, `WITH`, `VALUES`,
+`SHOW`, `DESCRIBE` and `EXPLAIN`. Every other statement is refused by the
+plugin's backend before it reaches Drill, and the query editor warns about it
+while you type. Three settings allow more:
+
+| Setting | Allows |
+| --- | --- |
+| Allow creating and dropping objects | `CREATE`, `DROP`, `ALTER`, `REFRESH`, `ANALYZE` |
+| Allow changing data | `INSERT`, `UPDATE`, `DELETE`, `MERGE`, `TRUNCATE` |
+| Allow changing Drill options | `ALTER SYSTEM`, `ALTER SESSION`, `SET`, `RESET`, `USE` |
+
+- The check looks at the statement's first keyword, after comments and
+  opening parentheses, so a query that only mentions these words in a string,
+  comment or column name is not affected.
+- Statements the plugin does not recognise are refused unless all three
+  settings are on.
+- With any setting off, text with more than one statement is refused.
+- In provisioning, the keys are `allowDDL`, `allowDML` and
+  `allowOptionChanges` under `jsonData`.
+
+This protects against mistakes and casual misuse. It does not replace Drill's
+own permissions: see [Security](#security).
 
 ## Writing queries
 
@@ -115,7 +141,7 @@ dashboard.
 ### Errors, timeouts and cancellation
 
 Drill's error message is shown in the panel, for example
-`PARSE ERROR: ... SQL Query: SELEC 1 ^`. When a query passes the timeout, or
+`PARSE ERROR: ... SQL Query: SELECT 1 FRM t ^`. When a query passes the timeout, or
 Grafana no longer needs it (the dashboard was closed or the time range
 changed), the plugin cancels it on Drill as well, so it stops using Drill's
 resources.
@@ -165,10 +191,14 @@ macros and `$__interval` are.
 
 ## Security
 
-- Anyone who can query this data source can run any SQL that the configured
+- Anyone who can query this data source can run any query that the configured
   Drill user is allowed to run, including from Explore. Give Grafana a Drill
   user with read access to only the data it needs, and use Grafana's data
   source permissions to limit who can query it.
+- Statements that change objects, data or Drill options are refused unless
+  the data source's [statement safety](#statement-safety) settings allow them.
+  Treat this as a second line of defence behind the Drill user's permissions,
+  not as the only one.
 - Credentials and TLS keys are stored in Grafana's encrypted secure settings
   and used only by the plugin's backend.
 - The plugin does not log SQL text above debug level. Grafana's own request

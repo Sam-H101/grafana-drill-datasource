@@ -12,10 +12,11 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/Sam-H101/grafana-drill-datasource/pkg/drill"
 	"github.com/Sam-H101/grafana-drill-datasource/pkg/macros"
 	"github.com/Sam-H101/grafana-drill-datasource/pkg/models"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/sqlguard"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
 // problem is an error translated for a user, with the status and error
@@ -34,6 +35,7 @@ func (d *Datasource) explain(err error) problem {
 		qerr    *drill.QueryError
 		herr    *drill.HTTPError
 		macErr  *macros.Error
+		grdErr  *sqlguard.Error
 		netErr  net.Error
 		dnsErr  *net.DNSError
 		opErr   *net.OpError
@@ -51,6 +53,8 @@ func (d *Datasource) explain(err error) problem {
 		return problem{backend.StatusBadRequest, strings.ReplaceAll(err.Error(), "\n", ": "), true}
 	case errors.As(err, &macErr):
 		return problem{backend.StatusBadRequest, macErr.Error(), true}
+	case errors.As(err, &grdErr):
+		return problem{backend.StatusForbidden, grdErr.Error(), true}
 	case errors.Is(err, drill.ErrAuthFailed):
 		if d.settings != nil && d.settings.AuthMode == models.AuthNone {
 			return problem{backend.StatusUnauthorized, "Drill requires authentication. Choose an authentication mode and enter a username and password.", true}

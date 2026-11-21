@@ -80,8 +80,14 @@ FROM cp.`employee.json`
 LIMIT 20
 ```
 
-**Errors.** `SELEC 1` shows Drill's parse error in the panel. A misspelt macro
+**Errors.** `SELECT 1 FRM t` shows Drill's parse error in the panel. A misspelt macro
 such as `$__timeFilterr(hire_date)` is reported by name without reaching Drill.
+
+**Statement safety.** `DROP TABLE IF EXISTS dfs.tmp.nothing` is refused with
+"DROP statements are blocked", and the editor shows a warning before the
+statement is run. Turning on **Allow creating and dropping objects** in the
+data source settings lets it through; Drill then answers that the table was
+not found.
 
 **Editor.** Typing after `FROM ` suggests schemas and tables; `$__` suggests
 macros. **Ctrl+Enter** runs the query.

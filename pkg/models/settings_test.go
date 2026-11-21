@@ -93,3 +93,27 @@ func TestParseQuery(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadSettingsStatementSafety(t *testing.T) {
+	// Nothing set: queries only.
+	s, err := LoadSettings(inst("http://drill:8047", `{}`, nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Statements.AllowDDL || s.Statements.AllowDML || s.Statements.AllowOptions {
+		t.Errorf("default policy = %+v, want everything blocked", s.Statements)
+	}
+
+	s, err = LoadSettings(inst("http://drill:8047", `{"allowDDL":true,"allowOptionChanges":true}`, nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !s.Statements.AllowDDL || s.Statements.AllowDML || !s.Statements.AllowOptions {
+		t.Errorf("policy = %+v, want DDL and options allowed, DML blocked", s.Statements)
+	}
+
+	// A non-boolean value must not be read as "allowed".
+	if _, err := LoadSettings(inst("http://drill:8047", `{"allowDDL":"yes"}`, nil)); err == nil {
+		t.Error("allowDDL:\"yes\" was accepted")
+	}
+}

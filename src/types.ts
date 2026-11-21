@@ -29,6 +29,11 @@ export interface DrillOptions extends DataSourceJsonData {
   defaultSchema?: string;
   timeoutSeconds?: number;
   autoLimit?: number;
+  // Statement safety: only queries run unless these are turned on. Enforced
+  // by the backend (pkg/sqlguard).
+  allowDDL?: boolean;
+  allowDML?: boolean;
+  allowOptionChanges?: boolean;
   // Read by the Grafana SDK's HTTP client.
   tlsSkipVerify?: boolean;
   tlsAuth?: boolean;

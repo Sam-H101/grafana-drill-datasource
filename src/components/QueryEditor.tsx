@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import {
+  Alert,
   Button,
   CodeEditor,
   Collapse,
@@ -14,6 +15,7 @@ import {
 } from '@grafana/ui';
 import { DataSource } from '../datasource';
 import { completionContext, MACROS, quoteIdentifier, tableRefs } from '../completion';
+import { blockedReason } from '../safety';
 import { DrillOptions, DrillQuery, FillMode, Format } from '../types';
 import { MacroHelp } from './MacroHelp';
 
@@ -85,6 +87,15 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
     [getSchemas]
   );
 
+  // The backend refuses these statements; say so while the SQL is being
+  // typed. The editor commits its text to the query only on blur or run, so
+  // keep what was typed since the last commit; a query changed from outside
+  // (a different base) wins over it.
+  const savedSql = query.rawSql ?? '';
+  const [draft, setDraft] = useState({ base: savedSql, text: savedSql });
+  const editorSql = draft.base === savedSql ? draft.text : savedSql;
+  const blocked = blockedReason(editorSql, datasource.statementPolicy);
+
   return (
     <Stack direction="column" gap={1}>
       <div data-testid="drill-sql-editor" aria-label="SQL query">
@@ -95,6 +106,7 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
           showLineNumbers
           showMiniMap={false}
           onBlur={setSql}
+          onChange={(text) => setDraft({ base: latest.current.rawSql ?? '', text })}
           onSave={runWith}
           onEditorDidMount={(editor, monaco) => {
             // Ctrl/Cmd+Enter runs the query.
@@ -163,6 +175,11 @@ export function QueryEditor({ query, onChange, onRunQuery, datasource }: Props) 
           }}
         />
       </div>
+      {blocked && (
+        <Alert severity="warning" title="This statement will not run" data-testid="drill-statement-blocked">
+          {blocked} An administrator can change this under Statement safety in the data source settings.
+        </Alert>
+      )}
       <Stack direction="row" gap={2} wrap="wrap" alignItems="center">
         <InlineField label="Format" labelWidth={10}>
           <RadioButtonGroup

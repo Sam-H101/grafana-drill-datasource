@@ -16,21 +16,21 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/pem"
-	"math/big"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"math"
+	"math/big"
 	"net/http"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/Sam-H101/grafana-drill-datasource/pkg/drill"
 	"github.com/Sam-H101/grafana-drill-datasource/pkg/plugin"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 // Dev-only credentials from devenv/drill/README.md.
@@ -332,4 +332,85 @@ func wrongCA(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return string(pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der}))
+}
+
+// TestStatementSafety runs real statements through the plugin: with the
+// default settings a CREATE TABLE AS must not create the table, and each
+// setting must let its own kind through to Drill.
+func TestStatementSafety(t *testing.T) {
+	const table = "dfs.tmp.`grafana_safety_it`"
+	run := func(t *testing.T, jsonData, sql string) backend.DataResponse {
+		t.Helper()
+		inst, err := plugin.NewDatasource(context.Background(), backend.DataSourceInstanceSettings{URL: drillURL(), JSONData: []byte(jsonData)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		js, _ := json.Marshal(map[string]string{"rawSql": sql})
+		resp, err := inst.(*plugin.Datasource).QueryData(context.Background(), &backend.QueryDataRequest{
+			Queries: []backend.DataQuery{{RefID: "A", JSON: js, Interval: time.Minute}},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return resp.Responses["A"]
+	}
+	exists := func(t *testing.T) bool {
+		t.Helper()
+		return run(t, `{}`, "SELECT * FROM "+table+" LIMIT 1").Error == nil
+	}
+	drop := func(t *testing.T) {
+		t.Helper()
+		if r := run(t, `{"allowDDL":true}`, "DROP TABLE IF EXISTS "+table); r.Error != nil {
+			t.Fatalf("cleanup: %v", r.Error)
+		}
+	}
+	drop(t)
+	t.Cleanup(func() { drop(t) })
+
+	// Default settings: blocked, and nothing happens on Drill.
+	for _, sql := range []string{
+		"CREATE TABLE " + table + " AS SELECT 1 AS a",
+		"/* SELECT 1 */ CREATE TABLE " + table + " AS SELECT 1 AS a",
+		"SELECT 1; CREATE TABLE " + table + " AS SELECT 1 AS a",
+	} {
+		r := run(t, `{}`, sql)
+		if r.Error == nil || r.Status != backend.StatusForbidden {
+			t.Errorf("%q: error=%v status=%v, want forbidden", sql, r.Error, r.Status)
+		}
+		if exists(t) {
+			t.Fatalf("%q created the table despite being blocked", sql)
+		}
+	}
+	for sql, want := range map[string]string{
+		"ALTER SESSION SET `planner.slice_target` = 100000": "ALTER SESSION statements are blocked",
+		"USE dfs.tmp":                   "USE statements are blocked",
+		"DROP TABLE IF EXISTS " + table: "DROP statements are blocked",
+	} {
+		if r := run(t, `{}`, sql); r.Error == nil || !strings.Contains(r.Error.Error(), want) {
+			t.Errorf("%q: error=%v, want %q", sql, r.Error, want)
+		}
+	}
+
+	// Allowing DDL lets CREATE and DROP through, and nothing else.
+	if r := run(t, `{"allowDDL":true}`, "CREATE TABLE "+table+" AS SELECT 1 AS a"); r.Error != nil {
+		t.Fatalf("CREATE with allowDDL: %v", r.Error)
+	}
+	if !exists(t) {
+		t.Fatal("CREATE with allowDDL did not create the table")
+	}
+	if r := run(t, `{"allowDDL":true}`, "ALTER SESSION SET `planner.slice_target` = 100000"); r.Error == nil {
+		t.Error("allowDDL let ALTER SESSION through")
+	}
+	// A blocked DROP leaves the table in place.
+	if r := run(t, `{"allowDML":true,"allowOptionChanges":true}`, "DROP TABLE "+table); r.Error == nil {
+		t.Error("DROP ran without allowDDL")
+	}
+	if !exists(t) {
+		t.Fatal("the table was dropped by a blocked statement")
+	}
+
+	// Allowing option changes lets ALTER SESSION through.
+	if r := run(t, `{"allowOptionChanges":true}`, "ALTER SESSION SET `planner.slice_target` = 100000"); r.Error != nil {
+		t.Errorf("ALTER SESSION with allowOptionChanges: %v", r.Error)
+	}
 }

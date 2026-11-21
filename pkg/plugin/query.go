@@ -9,11 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/Sam-H101/grafana-drill-datasource/pkg/drill"
 	"github.com/Sam-H101/grafana-drill-datasource/pkg/macros"
 	"github.com/Sam-H101/grafana-drill-datasource/pkg/models"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/sqlguard"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 // maxConcurrentQueries bounds how many queries of one request run at once.
@@ -66,6 +67,13 @@ func (d *Datasource) query(ctx context.Context, q backend.DataQuery) backend.Dat
 		return d.explain(err).response()
 	}
 	sql := drill.CleanSQL(expanded.SQL)
+	// Checked here, on the text that would be sent, so no caller of the query
+	// API can bypass it. Blocked statements never reach Drill.
+	if err := sqlguard.Check(sql, d.settings.Statements); err != nil {
+		p := d.explain(err)
+		backend.Logger.Warn("Statement blocked by the data source's statement safety settings", "refId", q.RefID, "reason", p.message)
+		return p.response()
+	}
 	schema := qm.DefaultSchema
 	if schema == "" {
 		schema = d.settings.DefaultSchema

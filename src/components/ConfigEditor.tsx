@@ -179,6 +179,48 @@ export function ConfigEditor(props: Props) {
       </section>
 
       <section>
+        <Text element="h3">Statement safety</Text>
+        <Text element="p" color="secondary">
+          Queries (SELECT, WITH, VALUES, SHOW, DESCRIBE, EXPLAIN) always run. Every other statement is refused before it
+          reaches Drill unless you allow its kind here. This guards against mistakes; also give Grafana a Drill user
+          that can only read the data it needs.
+        </Text>
+        <Field
+          label="Allow creating and dropping objects"
+          description="CREATE, DROP, ALTER, REFRESH and ANALYZE: tables, views, schemas, functions, metadata."
+        >
+          <Switch
+            id="drill-allow-ddl"
+            value={!!jsonData.allowDDL}
+            onChange={(e) => setJson('allowDDL', e.currentTarget.checked)}
+          />
+        </Field>
+        <Field label="Allow changing data" description="INSERT, UPDATE, DELETE, MERGE and TRUNCATE.">
+          <Switch
+            id="drill-allow-dml"
+            value={!!jsonData.allowDML}
+            onChange={(e) => setJson('allowDML', e.currentTarget.checked)}
+          />
+        </Field>
+        <Field
+          label="Allow changing Drill options"
+          description="ALTER SYSTEM, ALTER SESSION, SET, RESET and USE. ALTER SYSTEM affects every user of the Drill cluster."
+        >
+          <Switch
+            id="drill-allow-options"
+            value={!!jsonData.allowOptionChanges}
+            onChange={(e) => setJson('allowOptionChanges', e.currentTarget.checked)}
+          />
+        </Field>
+        {jsonData.allowDDL && jsonData.allowDML && jsonData.allowOptionChanges && (
+          <Alert severity="warning" title="No statement is blocked">
+            With all three allowed, anyone who can query this data source can run any statement the Drill user is
+            permitted to run.
+          </Alert>
+        )}
+      </section>
+
+      <section>
         <Text element="h3">Query defaults</Text>
         <Field label="Default schema" description="Schema for unqualified table names, for example dfs.tmp">
           <Input

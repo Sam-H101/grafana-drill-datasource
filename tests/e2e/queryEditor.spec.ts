@@ -93,7 +93,9 @@ test('time series query: one series per group, dashboard range applied, expanded
 
 test('a Drill error is shown with its message and flagged as downstream', async ({ panelEditPage, page }) => {
   await panelEditPage.datasource.set(DS_NAME);
-  const resp = await runSql(page, panelEditPage, 'SELEC 1');
+  // A typo after the first word: a misspelt first word is caught by the
+  // plugin's statement safety check instead (safety.spec.ts).
+  const resp = await runSql(page, panelEditPage, 'SELECT 1 FRM t');
   const body = await resp.json();
   expect(body.results.A.error).toContain('PARSE ERROR');
   expect(body.results.A.error).not.toContain('grafana-query');

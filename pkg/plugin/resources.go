@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/drill"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/resource/httpadapter"
-	"github.com/Sam-H101/grafana-drill-datasource/pkg/drill"
 )
 
 var _ backend.CallResourceHandler = (*Datasource)(nil)
