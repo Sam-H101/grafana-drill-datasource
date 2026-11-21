@@ -32,6 +32,12 @@ jobs:
         with:
           persist-credentials: false
 
+      # The tag decides the version, so a release created from the GitHub UI
+      # builds even if package.json was not bumped first. A tag that is not a
+      # version (v1.2.3) fails here, before the build.
+      - name: Use the tag as the plugin version
+        run: npm version --no-git-tag-version --allow-same-version "${GITHUB_REF_NAME#v}"
+
       - uses: grafana/plugin-actions/build-plugin@build-plugin/v2.0.2
         with:
           policy_token: ${{ (vars.GRAFANA_SIGN_RELEASES == 'true' || vars.GRAFANA_ROOT_URLS != '') && secrets.GRAFANA_ACCESS_POLICY_TOKEN || '' }}

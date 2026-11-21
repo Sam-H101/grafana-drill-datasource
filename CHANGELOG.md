@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 (2026-11-21)
+## 0.1.2 (2026-11-21)
 
 ### Changed
 
@@ -8,6 +8,11 @@
 - Releases are built unsigned until the plugin is approved for a community
   signature, and carry a build provenance attestation.
 - The Go module path matches the source repository.
+- The release build takes its version from the release tag.
+
+## 0.1.1 (2026-11-21)
+
+Tagged, but no build was published: the tag did not match the plugin version.
 
 ## 0.1.0 (2026-11-20)
 
