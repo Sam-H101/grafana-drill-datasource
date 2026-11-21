@@ -56,15 +56,20 @@ test('wrong password is reported, right password works (Basic)', async ({ create
   await shot(page, 'm1-config', 'wrong-password');
 
   // The saved password is now write-only: reset it and enter the right one.
-  // Grafana reloads the saved settings after Save & test; editing before that
-  // finishes gets overwritten, so wait for the page to settle.
+  // Grafana reloads the saved settings after Save & test, and a reload that
+  // lands after the edit puts the old (wrong) password back. No page signal
+  // marks the reload as done, so repeat the edit until Save & test succeeds;
+  // a plugin that rejects the right password still fails after the timeout.
   await page.waitForLoadState('networkidle');
   const password = page.locator('#drill-password');
-  await expect(password).toBeDisabled();
-  await page.getByRole('button', { name: 'Reset' }).first().click();
-  await expect(password).toBeEditable();
-  await password.fill(AUTH_PASS);
-  await expect(configPage.saveAndTest()).toBeOK();
+  await expect(async () => {
+    if (await password.isDisabled()) {
+      await page.getByRole('button', { name: 'Reset' }).first().click();
+    }
+    await expect(password).toBeEditable();
+    await password.fill(AUTH_PASS);
+    await expect(configPage.saveAndTest()).toBeOK();
+  }).toPass({ timeout: 30_000 });
   await expect(configPage).toHaveAlert('success', { hasText: 'Connected to Apache Drill' });
   await shot(page, 'm1-config', 'basic-ok');
 });

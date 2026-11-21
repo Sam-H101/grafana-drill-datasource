@@ -15,10 +15,20 @@ test('HTTPS Drill: untrusted until its CA certificate is configured', async ({ c
   await expect(configPage).toHaveAlert('error', { hasText: 'certificate signed by unknown authority' });
   await shot(page, 'm4-hardening', 'tls-untrusted');
 
+  // Grafana reloads the saved settings after Save & test; a reload that lands
+  // after these edits undoes them, so repeat them until Save & test succeeds.
   await page.waitForLoadState('networkidle');
-  await page.locator('#drill-tls-with-ca').check({ force: true });
-  await page.locator('#drill-tls-ca').fill(ca);
-  await expect(configPage.saveAndTest()).toBeOK();
+  const withCa = page.locator('#drill-tls-with-ca');
+  const caField = page.locator('#drill-tls-ca');
+  await expect(async () => {
+    if (!(await withCa.isChecked())) {
+      await withCa.check({ force: true });
+    }
+    if (await caField.isEditable()) {
+      await caField.fill(ca);
+    }
+    await expect(configPage.saveAndTest()).toBeOK();
+  }).toPass({ timeout: 30_000 });
   await expect(configPage).toHaveAlert('success', { hasText: 'Connected to Apache Drill' });
   await shot(page, 'm4-hardening', 'tls-custom-ca');
 });
