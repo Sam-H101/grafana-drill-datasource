@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # App test: stop Drill while a panel query is running and check that Grafana
 # shows a clean error well before the query timeout. Needs the dev stack up
-# (docker compose up -d). Run from WSL in the repo: devenv/app-test-drill-failure.sh
+# (docker compose up -d). Run from the repo root: devenv/app-test-drill-failure.sh
 set -uo pipefail
 cd "$(dirname "$0")/.."
 export TOOLBOX_UID="$(id -u)" TOOLBOX_GID="$(id -g)"

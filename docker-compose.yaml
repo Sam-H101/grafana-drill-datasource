@@ -79,9 +79,9 @@ services:
     build:
       context: devenv/toolbox
       args:
-        UID: ${TOOLBOX_UID:-1001}
-        GID: ${TOOLBOX_GID:-1002}
-    image: samh-apache-drill-toolbox:local
+        UID: ${TOOLBOX_UID:-1000}
+        GID: ${TOOLBOX_GID:-1000}
+    image: apache-drill-datasource-toolbox:local
     init: true
     working_dir: /workspace
     environment:

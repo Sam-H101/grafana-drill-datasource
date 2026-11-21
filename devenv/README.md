@@ -1,19 +1,24 @@
 # Development environment
 
-Nothing is installed on the Windows host. Run everything from WSL (`vostok`) in
-the repo directory, `/mnt/c/Users/sam/source/repos/grafana-drill-datasource`.
+Everything runs in Docker: you need Docker with Compose v2 and a Bash shell
+(Linux, macOS, or WSL on Windows). Node, Go and the other build tools live in a
+toolbox container, so nothing else has to be installed. Run the commands below
+from the repository root.
 
 ## Toolbox
 
 `devenv/toolbox/Dockerfile` has Node, Go, Mage, golangci-lint and Chromium's
 system libraries. `node_modules`, Go caches, the npm cache and Playwright
-browsers live in Docker volumes, so nothing lands on the C: drive except build
-output in `dist/`.
+browsers live in Docker volumes; only build output (`dist/`) is written to the
+working tree. `devenv/run.sh` runs a command in the toolbox as your own user, so
+files it writes belong to you.
 
 ```sh
 devenv/run.sh npm ci                 # install frontend deps (into a volume)
 devenv/run.sh npm run build          # frontend
-devenv/run.sh mage -v build:linux    # backend
+devenv/run.sh npm run dev            # frontend, rebuild on change
+devenv/run.sh mage -v build:linux    # backend for the dev stack
+devenv/run.sh mage -v buildAll       # backend for every platform
 devenv/run.sh npm run typecheck
 devenv/run.sh npm run lint
 devenv/run.sh npm run test:ci        # frontend unit tests
@@ -24,15 +29,33 @@ devenv/run.sh                        # shell
 
 ## Dev stack
 
+Build the plugin into `dist/` first, then:
+
 ```sh
-docker compose up -d --build         # Grafana :3000, Drill :8047, authenticated Drill :8048 (127.0.0.1)
+docker compose up -d --build --wait  # Grafana and three Drills
 docker compose restart grafana       # pick up a rebuilt backend binary
 docker compose logs -f grafana
 docker compose down                  # add -v to drop volumes too
 ```
 
-Both ports bind to localhost only. The dev Grafana grants anonymous Admin and
-runs in development mode; never expose it.
+| Service | Address | Purpose |
+| --- | --- | --- |
+| Grafana | http://localhost:3000 | Provisioned data source, demo dashboard and alert rule |
+| `drill` | http://localhost:8047 | Drill without authentication |
+| `drill-auth` | http://localhost:8048 | Drill with user authentication (Basic and form login) |
+| `drill-tls` | https://localhost:8049 | Drill over HTTPS with a CA generated at start |
+
+Inside Docker, Grafana reaches the Drills by service name, for example
+`http://drill-auth:8047`. The dev-only credentials and Drill settings are in
+`devenv/drill/README.md`. To trust `drill-tls`, export its CA with
+`docker compose cp drill-tls:/tls/ca.crt .`.
+
+All ports bind to 127.0.0.1. The dev Grafana grants anonymous Admin; see
+[Exposing the stack](#exposing-the-stack-on-the-network) before opening it up.
+
+The versions tested are pinned in `docker-compose.yaml`. Override them with
+`GRAFANA_VERSION`, `GRAFANA_IMAGE` (`grafana` or `grafana-enterprise`) and
+`DRILL_VERSION`.
 
 ## Tests against the stack
 
@@ -42,7 +65,13 @@ devenv/run.sh npm run e2e                       # Playwright, tests/e2e
 devenv/run.sh go test -tags integration ./tests/integration/...
 ```
 
-Inside the toolbox, `GRAFANA_URL` and `DRILL_URL` point at the compose services.
+Inside the toolbox these reach the compose services by name, and the HTTPS
+Drill's CA is mounted at `/tls/ca.crt`. To run the integration tests from
+elsewhere (as CI does), point them at the published ports with `DRILL_URL`,
+`DRILL_AUTH_URL`, `DRILL_TLS_URL` and `DRILL_TLS_CA_FILE`.
+
+Playwright saves a screenshot of each step under `artifacts/app-tests/`, so you
+can check what the tests saw.
 
 ## Failure test
 
@@ -53,9 +82,8 @@ part of `npm run e2e` (the toolbox has no Docker socket, on purpose).
 
 ## Exposing the stack on the network
 
-Ports bind to 127.0.0.1 by default. To reach the stack from other machines,
-turn off anonymous Admin and set an admin password; the anonymous setting is
-baked into the image, so rebuild:
+To reach the stack from other machines, turn off anonymous Admin and set an
+admin password. The anonymous setting is built into the image, so rebuild:
 
 ```sh
 BIND_ADDRESS=0.0.0.0 ANONYMOUS_AUTH_ENABLED=false \

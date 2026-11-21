@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run a command in the toolbox container, from the repo root, inside WSL.
+# Run a command in the toolbox container from the repo root, as the calling user.
 #   devenv/run.sh npm run build
 #   devenv/run.sh mage -v build:linux
 #   devenv/run.sh            (interactive shell)

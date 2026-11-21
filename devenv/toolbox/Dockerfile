@@ -12,8 +12,8 @@ COPY --from=go /usr/local/go /usr/local/go
 ARG MAGE_VERSION=v1.17.2
 ARG GOLANGCI_LINT_VERSION=v2.15.0
 ARG PLAYWRIGHT_VERSION=1.65.1
-ARG UID=1001
-ARG GID=1002
+ARG UID=1000
+ARG GID=1000
 
 ENV GOPATH=/go \
     GOTOOLCHAIN=local \
@@ -31,7 +31,8 @@ RUN npx -y playwright@${PLAYWRIGHT_VERSION} install-deps chromium \
  && apt-get install -y --no-install-recommends jq \
  && rm -rf /var/lib/apt/lists/* /root/.npm
 
-# Run as the WSL user's uid/gid so files written to the bind mount belong to them.
+# Run as the calling user's uid/gid (devenv/run.sh passes them) so files
+# written to the bind mount belong to them.
 # The node image already has uid 1000; free the requested ids if taken.
 RUN if getent passwd ${UID} >/dev/null; then userdel -r "$(getent passwd ${UID} | cut -d: -f1)"; fi \
  && if ! getent group ${GID} >/dev/null; then groupadd -g ${GID} dev; fi \
