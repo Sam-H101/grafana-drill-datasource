@@ -22,8 +22,6 @@ jobs:
       plugin-version: ${{ steps.metadata.outputs.plugin-version }}
       has-e2e: ${{ steps.check-for-e2e.outputs.has-e2e }}
       has-backend: ${{ steps.check-for-backend.outputs.has-backend }}
-    env:
-      GRAFANA_ACCESS_POLICY_TOKEN: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -89,18 +87,8 @@ jobs:
             echo "has-e2e=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Sign plugin
-        if: ${{ env.GRAFANA_ACCESS_POLICY_TOKEN != '' }}
-        env:
-          # Comma-separated root URLs for a private signature; unset means a
-          # community signature (needs the plugin approved on grafana.com).
-          ROOT_URLS: ${{ vars.GRAFANA_ROOT_URLS }}
-        run: |
-          if [ -n "$ROOT_URLS" ]; then
-            npm run sign -- --rootUrls "$ROOT_URLS"
-          else
-            npm run sign
-          fi
+      # Builds stay unsigned: CI's Grafana allows this plugin unsigned, and
+      # only the release workflow signs (with the access policy token).
 
       - name: Get plugin metadata
         id: metadata
