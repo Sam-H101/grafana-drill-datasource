@@ -32,11 +32,16 @@ jobs:
         with:
           persist-credentials: false
 
-      # The tag decides the version, so a release created from the GitHub UI
-      # builds even if package.json was not bumped first. A tag that is not a
-      # version (v1.2.3) fails here, before the build.
-      - name: Use the tag as the plugin version
-        run: npm version --no-git-tag-version --allow-same-version "${GITHUB_REF_NAME#v}"
+      # Grafana rejects a plugin whose built version differs from package.json
+      # in the source, so the tag must match it. Check before the build, not
+      # after it.
+      - name: Check the tag matches package.json
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match package.json version ${version}. Set the version in package.json and package-lock.json, add it to CHANGELOG.md, push, then tag v<version>."
+            exit 1
+          fi
 
       - uses: grafana/plugin-actions/build-plugin@build-plugin/v2.0.2
         with:

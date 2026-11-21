@@ -59,13 +59,14 @@ allow_loading_unsigned_plugins = smartquinoa1504-apachedrill-datasource
 
 1. Set the version in `package.json` (and `package-lock.json`) and add a dated
    entry to `CHANGELOG.md`.
-2. Push a tag for it, for example `v0.1.2`, or create a release with that tag
-   in the GitHub UI. The Release workflow builds the plugin for every platform
-   and attaches the zip and its SHA-1 to a draft GitHub release.
+2. Push that commit, then push a tag for it, for example `v0.1.2`, or create a
+   release with that tag in the GitHub UI. The Release workflow builds the
+   plugin for every platform and attaches the zip and its SHA-1 to a draft
+   GitHub release.
 
-The build takes its version from the tag, so a forgotten bump in step 1 does
-not break the release; the repository just shows the old version until it is
-updated.
+The tag must equal `v` plus the version in `package.json`: Grafana rejects a
+plugin whose built version differs from the source. The workflow checks this
+first and fails within seconds if they differ.
 
 Signing is controlled by repository variables, described at the top of
 `.github/workflows/release.yml`.
