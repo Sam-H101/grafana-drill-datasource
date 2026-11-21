@@ -9,6 +9,7 @@
   signature, and carry a build provenance attestation.
 - The Go module path matches the source repository.
 - The release workflow checks the tag against the plugin version before building.
+- Built with Go 1.26.11, which fixes vulnerabilities in the Go standard library.
 
 ## 0.1.1 (2026-11-21)
 

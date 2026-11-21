@@ -1,6 +1,6 @@
 module github.com/Sam-H101/grafana-drill-datasource
 
-go 1.26.5
+go 1.26.11
 
 require github.com/grafana/grafana-plugin-sdk-go v0.302.0
 
