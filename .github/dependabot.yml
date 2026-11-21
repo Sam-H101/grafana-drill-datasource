@@ -18,6 +18,13 @@ updates:
       # Keep the types on the Node 24 runtime used to build.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
+      # eslint-plugin-react (needed by @grafana/eslint-config) supports ESLint 9
+      # at most.
+      - dependency-name: 'eslint'
+        update-types: ['version-update:semver-major']
+      # @grafana/eslint-config 10 uses rule options removed in @stylistic 6.
+      - dependency-name: '@stylistic/eslint-plugin'
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: 'chore'
       include: 'scope'
