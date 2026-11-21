@@ -3,6 +3,9 @@
 Bug reports and pull requests are welcome in the
 [issue tracker](https://github.com/Sam-H101/grafana-drill-datasource/issues).
 
+To try the plugin without building anything, or to see what to test, read the
+[testing guide](docs/testing.md).
+
 ## Building and testing
 
 Everything runs in Docker; nothing else needs installing. The toolbox
