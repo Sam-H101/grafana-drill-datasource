@@ -11,22 +11,6 @@ and alert rules work.
 - Apache Drill 1.19 or later, with its web port (8047 by default) reachable
   from the Grafana server. Embedded and distributed Drill both work.
 
-## Installation
-
-This plugin is not yet published to the Grafana plugin catalog, and the
-release archive is unsigned.
-
-1. Unzip the release archive into Grafana's plugins directory, so that you have
-   `<plugins>/smartquinoa1504-apachedrill-datasource/plugin.json`.
-2. Allow the unsigned plugin in `grafana.ini`:
-
-   ```ini
-   [plugins]
-   allow_loading_unsigned_plugins = smartquinoa1504-apachedrill-datasource
-   ```
-
-3. Restart Grafana, then add a data source of type **Apache Drill**.
-
 ## Configuration
 
 | Setting | Notes |
@@ -202,11 +186,11 @@ macros and `$__interval` are.
   have not been tested against a Drill deployment.
 - SQL only: there is no visual query builder.
 
-## Development
+## Feedback and contributing
 
-Building and testing happen in containers; see `devenv/README.md` in the
-source repository. Drill REST behaviour the backend relies on is described in
-`docs/drill-rest-notes.md`.
+Report bugs and request features in the
+[issue tracker](https://github.com/Sam-H101/grafana-drill-datasource/issues). To build or change the
+plugin, see [CONTRIBUTING.md](https://github.com/Sam-H101/grafana-drill-datasource/blob/master/CONTRIBUTING.md).
 
 ## Licence
 

@@ -13,9 +13,9 @@ import (
 	"syscall"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/samh/apache-drill/pkg/drill"
-	"github.com/samh/apache-drill/pkg/macros"
-	"github.com/samh/apache-drill/pkg/models"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/drill"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/macros"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/models"
 )
 
 // problem is an error translated for a user, with the status and error

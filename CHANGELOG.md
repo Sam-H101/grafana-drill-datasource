@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1 (2026-11-21)
+
+### Changed
+
+- Plugin metadata links to the source code, documentation and issue tracker.
+- Releases are built unsigned until the plugin is approved for a community
+  signature, and carry a build provenance attestation.
+- The Go module path matches the source repository.
+
 ## 0.1.0 (2026-11-20)
 
 First version.

@@ -11,8 +11,8 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
-	"github.com/samh/apache-drill/pkg/drill"
-	"github.com/samh/apache-drill/pkg/models"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/drill"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/models"
 )
 
 var (

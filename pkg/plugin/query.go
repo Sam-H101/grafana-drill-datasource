@@ -11,9 +11,9 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
-	"github.com/samh/apache-drill/pkg/drill"
-	"github.com/samh/apache-drill/pkg/macros"
-	"github.com/samh/apache-drill/pkg/models"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/drill"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/macros"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/models"
 )
 
 // maxConcurrentQueries bounds how many queries of one request run at once.

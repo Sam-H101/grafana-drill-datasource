@@ -29,8 +29,8 @@ import (
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
-	"github.com/samh/apache-drill/pkg/drill"
-	"github.com/samh/apache-drill/pkg/plugin"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/drill"
+	"github.com/Sam-H101/grafana-drill-datasource/pkg/plugin"
 )
 
 // Dev-only credentials from devenv/drill/README.md.

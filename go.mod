@@ -1,4 +1,4 @@
-module github.com/samh/apache-drill
+module github.com/Sam-H101/grafana-drill-datasource
 
 go 1.26.5
 
